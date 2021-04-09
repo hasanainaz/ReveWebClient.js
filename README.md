@@ -6,8 +6,8 @@ Figure: Flowchart of the User Interface. \
 ![stream_client_flowchart](stream_client_flowchart.png)
 
 ## [Live Demo](https://app.recite.live/t1) 
- Privacy Notice: your voice may be recorded when you test the demo URL. 
- 
+* Privacy Notice: your voice may be recorded when you test the demo URL. 
+* On the demo page, click "Connect," and it would prompt to request your consent before connecting to the microphone and speakers. It has been tested on Chrome, Firefox, and Safari. The Safari also requires the user to manually enable JavaScript from its settings. The server function is currently set to output the features given Flac input. The SQT features are the fundamental frequency and the harmonic energies. The total delay aggregates the ping, the server processing, and the audio readings and writings times. 
 
 ## Configuration Notes
 
