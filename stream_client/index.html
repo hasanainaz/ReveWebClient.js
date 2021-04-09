@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"> 
+<meta http-equiv="pragma" content="no-cache" /> <!--Debug: reload when page refresh-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!--Compatibility: screens-->
+<meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1"/> <!--Compatibility: Internet Explorer-->
+<script type="text/javascript" src="./jquery-3.5.1.min.js"></script>  <!--Library-->
+<script type="text/javascript" src="./libflac.min.js"></script>  <!--Library-->
+<link rel="shortcut icon" href="./favicon.ico">
+<title>Recite.Live</title>
+      
+<style type="text/css">
+.user_picture {
+        
+}
+button {
+/*   all: unset;
+  cursor: pointer;
+} */
+</style>
+      
+</head>
+    
+    
+<body style='color: #5D5E5E; margin:0' onpagehide="endSession();">
+        
+
+            
+<div style="height:70px; position: -webkit-sticky;  position: sticky;top: 0; background-color: #BFBEBF;display: flex; align-items: center;  justify-content: space-between;">
+    <div style="display: flex;  justify-content: space-between; align-items: center;font-size: 160%;">
+        &emsp;
+        <button onclick="location.href='/t1/reset'" type="button">New Session</button>
+        &ensp;    
+    </div>
+    <div style="display: flex;  justify-content: flex-end; align-items: center;">
+        <img style="border-radius: 50%;margin-right: 10px;" src="/t1/static/Reve_User.png"  height="60px" >
+        <div>
+            <div style="font-weight: bold;">
+                Reve User
+                <br/>
+                <button onclick="location.href='/t1/login'" type="button">Sign In</button>
+            </div>
+        </div>
+        &emsp;&emsp;
+    </div>
+</div>
+            
+
+
+<br/><br/><br/><br/>
+          
+<div style="display: flex; flex-direction:column; justify-content: center; align-items: center;">
+    <img style="margin-right: 10px;" src="/t1/static/favicon.png"  height="125px" > 
+     <div style="  font-size: 300%; font-weight: 800; text-align:center">
+         Recite.Live
+    </div>
+</div>
+
+<div style="display: flex;  justify-content: center; align-items: center; "> 
+    <button id="stopBtn" style="height:50px;width:120px; font-size: 15px; display: inline-flex;
+  align-items: center;justify-content: center;border-radius: 20px 5px 5px 20px;">
+        <img src="/t1/static/mic_off.png" alt="Start" width="15" height="15" style="padding-right: 5px;"/>
+        Disconnect
+    </button>
+    <button id="startBtn" style="height:50px;width:120px; font-size: 15px; display: inline-flex;
+      align-items: center;justify-content: center;border-radius: 5px 20px 20px 5px;">
+    <img src="/t1/static/mic_on.png" alt="Start" width="15" height="15" style="padding-right: 5px;"/>
+    Connect
+    </button>          
+</div>
+                 
+<br/>
+    
+<div style="display: flex;  justify-content: center; align-items: center; "> 
+    <div>
+        Session's Token: vpJ102
+    </div>
+    &emsp;
+    <div id="ping">
+    </div>     
+</div>
+            
+<br/><br/><br/><br/>
+
+
+<div id="userpanel">
+</div>
+<button onclick="getHello()">
+Hello
+</button>
+<label id="gotHello">
+</label>
+                
+
+<div style="position: fixed;left: 0;bottom: 0;width: 100%;height:75px;">
+    <form action="javascript:send_form();" method="post">
+        <input type="text" name="enter" class="enter" value="" id="send_form"/>
+        <input type="submit" value="send" OnClick="send_form()"/>
+    </form>
+    <div id="log" style="position: fixed;left: 0;bottom: 0;width: 100%;height:50px; word-wrap: break-word;overflow-y: auto;">
+    </div>         
+</div>
+            
+
+      
+<script>
+    
+// define user controls and outputs
+var startBtn = document.getElementById('startBtn');
+var stopBtn = document.getElementById('stopBtn');
+stopBtn.style.visibility = 'hidden';
+var sendBtn = document.getElementById("send_form");
+var pingDiv = document.getElementById('ping');
+var logDiv = document.getElementById('log');
+function print(text) { 
+    logDiv.innerHTML += "<br>" +  text ;
+    logDiv.scrollTop = logDiv.scrollHeight;
+};
+setInterval(function(){ 
+var pingT0 = Date.now();
+fetch('./ping')
+    .then(function (response) {
+        pingDiv.innerHTML = "Ping: " + (Date.now() - pingT0) + " ms" ; // milliseconds 
+    })
+    .catch(function (err) {
+        pingDiv.innerHTML = "Ping: "
+    });
+}, 1000);
+
+
+console.info('media supported: ', navigator.mediaDevices.getSupportedConstraints() ); // debug
+const getMethods = (obj) => {
+  let properties = new Set()
+  let currentObj = obj
+  do {
+    Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
+  } while ((currentObj = Object.getPrototypeOf(currentObj)))
+  return [...properties.keys()].filter(item => typeof obj[item] === 'function')
+}     
+var type = (function(global) {
+    var cache = {};
+    return function(obj) {
+        var key;
+        return obj === null ? 'null' // null
+            : obj === global ? 'global' // window in browser or global in nodejs
+            : (key = typeof obj) !== 'object' ? key // basic: string, boolean, number, undefined, function
+            : obj.nodeType ? 'object' // DOM element
+            : cache[key = ({}).toString.call(obj)] // cached. date, regexp, error, object, array, math
+            || (cache[key] = key.slice(8, -1).toLowerCase()); // get XXXX from [object XXXX], and cache it
+    };
+}(this));                
+// const range = (start, stop, step = 1) =>
+//     Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * step)
+
+         
+
+
+// define voice variables
+
+var Fs1 = 16000;
+var audioContext = window.AudioContext || window.webkitAudioContext; // of the browser application
+var SoundAC;
+var DownAudioStop;
+         
+var TrackChunkSize  = 1024; // 2048, 4096, or 8192 (for about 50, 100, and 200 ms reading/writing latency)
+var LiveTrack = [];  // download track
+         
+var microphone;
+var filter1;
+var filter2;
+var speakers;
+         
+var EncFlac = 0;
+var EncFlacStream = 1;
+var EncFlacProcess = 1;
+function EncFlacWrite( encoded , bytes){
+    fetch('./audio_to_server', { method: "post", body: encoded });   // upload to server
+    console.log('Bytes encoded: ', bytes  );
+}
+function EncFlacMeta( data ){
+//     console.info('meta data: ', data); // debug
+}
+
+         
+function MediaStart(stream){
+console.log('media starting.' ); 
+    
+stream.getTracks().forEach( (track) => {   
+    console.info('track info: ', track.getConstraints() ); // debug
+});
+    
+    
+window.localStream = stream;
+microphone = SoundAC.createMediaStreamSource(stream);
+filter1 = SoundAC.createBiquadFilter();
+filter2 = SoundAC.createBiquadFilter();
+var channeln = SoundAC.destination.maxChannelCount;
+var Fs0 = SoundAC.sampleRate;
+speakers  = SoundAC.createScriptProcessor( TrackChunkSize , 1,  channeln );
+filter1.type = "lowpass";
+filter1.frequency.value = Fs1/2;
+filter2.type = "lowpass";
+filter2.frequency.value = Fs1/2;
+
+microphone.connect(filter1);
+filter1.connect(filter2);
+filter2.connect(speakers);
+speakers.connect(SoundAC.destination);
+    
+var TrackReady = false;
+speakers.onaudioprocess = function(event) {
+
+    // mic
+    var I0 = event.inputBuffer.getChannelData(0);
+    // subsample
+    var toSize = TrackChunkSize / Fs0 * Fs1 ;
+    I1 = new Int32Array(toSize); // Int32 but to carry Int16
+    for ( i = 0 ; i < toSize ; i++  ){
+        var w = i * Fs0 / Fs1 ; 
+        var wf = Math.floor(w) ;
+        I1[i] = ( (w-wf) * I0[ wf ] + (wf+1-w) * I0[ wf+1 ] ) * 32767 ; // from [-1, 1] to to (-32768, 32767]
+    }
+    
+    // flac output
+    EncFlacProcess=Flac.FLAC__stream_encoder_process_interleaved( EncFlac, I1, toSize ); 
+    // pcm output 
+//      fetch('./audio_to_server', { method: "post", body: Int16Array.from( I1 ) });   // upload to server
+    
+    
+    if ( LiveTrack.length > TrackChunkSize * 10 ) {
+        TrackReady = true;
+    }
+    
+    // speakers
+    if ( TrackReady && LiveTrack.length > TrackChunkSize ) { // pop from track to speakers
+        for (var j=0 ; j < channeln ; j++) { // for each audio speaker
+            var OutputChunk = event.outputBuffer.getChannelData(j); // mono 
+            for (var i = 0; i < TrackChunkSize; i++) { // add chuck to the output audio buffer
+                OutputChunk[i] = LiveTrack[i] ; // 32767;   // normalize magnitude
+            }
+        }
+        LiveTrack = LiveTrack.slice( TrackChunkSize );  // remove chunk from the track array
+    } else {
+        TrackReady = false;
+        for (var j=0 ; j < channeln ; j++) { // for each audio speaker
+            var OutputChunk = event.outputBuffer.getChannelData(j); // mono 
+            for (var i = 0; i < TrackChunkSize; i++) { // add chuck to the output audio buffer
+                OutputChunk[i] = 0;
+            }
+        }
+    }
+    
+
+};
+    
+    
+    
+
+
+var FrameStep = Math.floor( Fs0 * 0.020 );
+var Frame = new Float32Array( FrameStep );
+var T0 = 0;
+fetch( './audio_from_server'  )
+.then(response => response.body)
+.then(rb => {
+  const reader = rb.getReader();
+  return new ReadableStream({
+    start(controller) {
+       // connected
+      function push() {
+        reader.read().then( ({done, value}) => {
+          if (done) {
+            console.log( "server ended down audio" );  
+            controller.close();
+            return;
+          }
+          if (DownAudioStop) {
+            console.log( "client ended down audio" );  
+            controller.close();
+            return;
+          }
+            
+          
+            
+//     var arr4a = new Int16Array( value.buffer  ); // cast Uint8 as Int16
+//     var arr4b = Float32Array.from( arr4a );  // convert samples from Int16 to Float32
+//     var arr4 = upsample(  arr4b  , 16000 , SoundAC.sampleRate ); // nearest nneighbor resampling
+//     LiveTrack.push(...arr4); // append downloaded chunks to track array
+   
+
+            var V0 = new Uint16Array( value.buffer  ); // cast Uint8 as Uint16
+            var V1 = Float32Array.from( V0 );
+            for ( var i = 0 ; i < V1.length ; i += 33 ) {
+                var FF1 = V1[i] / Fs0 ;
+                for ( var t = 0 ; t < FrameStep ; t++ ) {
+                    Frame[t] = 0;
+                    for ( var j = 1 ; j < 33 ; j++ ) {
+                        Frame[t] += Math.cos(2*Math.PI* (T0+t) * j * FF1 ) * V1[i+j] / 65535;
+                    }
+                }
+                LiveTrack.push(...Frame);
+                T0 += FrameStep;
+            }
+            
+            console.log( "down sound receiving: " , V1[0] );  
+            
+            
+            
+          push();
+        })
+      }
+      push();
+    }
+  });
+})
+    
+    
+console.log('media started.' );
+}
+            
+         
+         
+startBtn.addEventListener('click', () => {
+    startBtn.style.visibility = 'hidden';
+    stopBtn.style.visibility = 'visible';
+    
+    EncFlac = Flac.create_libflac_encoder( Fs1 , 1 , 16 , 5 , 0 , false , 0 );
+    EncFlacStream = Flac.init_encoder_stream( EncFlac , EncFlacWrite , EncFlacMeta );
+//    EncFlacStream = Flac.init_encoder_ogg_stream( EncFlac , EncFlacWrite , EncFlacMeta);
+    
+    SoundAC = new AudioContext();
+    DownAudioStop = false;
+    
+    
+    
+    navigator.mediaDevices.getUserMedia({
+        audio:{
+    autoGainControl: false,
+    echoCancellation: false,
+    noiseSuppression: false,
+        },
+        video:false})
+    .then( MediaStart ).catch(    (e) => {console.log(e);}   );
+    
+
+    
+        
+});
+
+function endSession() {
+    fetch('./stop_audio_from_server');
+}
+         
+stopBtn.addEventListener('click', () => {
+    stopBtn.style.visibility = 'hidden';
+    startBtn.style.visibility = 'visible';
+    console.log('media stop.' );
+    
+    fetch('./stop_audio_from_server');
+    DownAudioStop = true;
+    
+    microphone.disconnect();
+    filter1.disconnect();
+    filter2.disconnect();
+    speakers.disconnect();
+
+    SoundAC.close();
+    microphone  = null;
+    filter1  = null;
+    filter2  = null;
+    speakers = null;
+    
+    window.localStream.getTracks().forEach( (track) => {track.stop();});
+
+    Flac.FLAC__stream_encoder_finish( EncFlac );
+    Flac.FLAC__stream_encoder_delete( EncFlac );
+
+    
+});
+
+         
+
+         
+
+         
+         
+         
+             
+      
+         
+         
+         
+         
+         
+         
+         
+function getHello() {
+     fetch('./hello')
+    .then(response => response.json())  
+    .then(json => document.getElementById("gotHello").innerHTML = JSON.stringify(json));
+};
+
+function send_form() {
+   fetch('./txt_to_server', { method: "post", body: document.getElementById('send_form').value +"\n" });
+   document.getElementById('send_form').value = "";
+};
+         
+         
+fetch('./txt_from_server')
+.then(response => response.body)
+.then(rb => {
+  const reader = rb.getReader();
+  return new ReadableStream({
+    start(controller) {
+       // connected
+      function push() {
+        reader.read().then( ({done, value}) => {
+          if (done) {
+            // server disconnected 
+              print("connection ended")
+            controller.close();
+            return;
+          }
+
+//           controller.enqueue(value);
+            print( String.fromCharCode.apply(String, value)  );
+//             print( JSON.stringify( value ) );
+//             print( value );
+          push();
+        })
+      }
+
+      push();
+    }
+  });
+})
+// .then(stream => {
+//   // Respond with our stream
+//   return new Response(stream, { headers: { "Content-Type": "text/html" } }).text();
+// })
+// .then(result => {
+//   // Do things with result
+//   console.log(result);
+// });
+         
+         
+
+let logError = (error) => {alert(error);}  //popup error message
+</script>      
+</body>
+</html>
+    
+    
