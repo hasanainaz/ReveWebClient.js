@@ -13,7 +13,7 @@ Figure: Flowchart of the User Interface. \
 
 * Copy the files to a host and check the files' permissions. 
 * Modify the URLs in the index.html file to map to the new directories. 
-* Edit the "./*" HTTP requests to point to a custom server or to the echo demo "https://app.recite.live/t1/*".
+* Edit the "./\*" HTTP requests to point to a custom server or to the echo demo "https://app.recite.live/t1/\*".
 * Also modify the "libflac.min.js.mem" URL in the  libflac.min.js file. 
 
 
