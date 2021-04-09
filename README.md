@@ -9,14 +9,14 @@ Figure: Flowchart of the User Interface. \
  Privacy Notice: your voice may be recorded when you test the demo URL. 
  
 
-## Copying Notes
+## Configuration Notes
 
 * Copy the files to the new server and check the files' permissions.  
 * Modify the URLs in the index.html file to map to the new directories. 
 * Also modify the "libflac.min.js.mem" URL in the  libflac.min.js file.
 
 
-## Libraries & acknowledgments
+## Libraries & Acknowledgments
 
 ### [LibFlac.js](https://github.com/mmig/libflac.js)
 * libflac.min.js
