@@ -11,9 +11,11 @@ Figure: Flowchart of the User Interface. \
 
 ## Configuration Notes
 
-* Copy the files to the new server and check the files' permissions.  
+* Copy the files to a host and check the files' permissions. 
 * Modify the URLs in the index.html file to map to the new directories. 
-* Also modify the "libflac.min.js.mem" URL in the  libflac.min.js file.
+* Edit the "./*" HTTP requests to point to a custom server or to the echo demo "https://app.recite.live/t1/*".
+* Also modify the "libflac.min.js.mem" URL in the  libflac.min.js file. 
+
 
 
 ## Libraries & Acknowledgments
