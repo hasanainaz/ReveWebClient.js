@@ -3,7 +3,7 @@
 The JavaScript client is in stream_client/index.html. It is a web user interface that captures, downsamples to 16kHz, and POSTs speech chunks to Python. Simultaneously, the interface also streams, upsamples, and reconstructs back the speech signal. The SQT features in the 16kHz are 32 harmonic energies along with the vividest fundamental frequency in the range 55-880Hz. See the following figure for the flowchart, which does not exactly describe the implementation. The LibFlac, a JavaScript library, is being used to compress the audio chunks in streaming mode. The Flac is lossless and reduces about 30% from the PCM chunk size. Another library also used is AudioContext, for the browsers' compatibilities, which also include mobile versions. This implementation simplifies the compatibility of the devices in future work. 
 
 Figure: Flowchart of the User Interface. \
-![stream_client_flowchart](stream_client_flowchart.png)
+![stream_client_flowchart](stream_client_flowchart1.png)
 
 ## [Live Demo](https://app.recite.live/t1) 
 * Privacy Notice: your voice may be recorded when you test the demo URL. 
